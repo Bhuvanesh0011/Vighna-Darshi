@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vighna-Darshi | Disruption-Aware Logistics</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <!-- LOGIN PAGE -->
+    <section id="loginPage">
+        <div class="login-card">
+            <div class="logo">
+                <div class="logo-mark">V</div>
+                <h1>VIGHNA-DARSHI</h1>
+                <p>Disruption-Aware Logistics Intelligence</p>
+            </div>
+            <div class="role-buttons">
+                <button class="role-btn active" id="adminRoleBtn" onclick="selectRole('admin')">Logistic Administrator</button>
+                <button class="role-btn" id="partnerRoleBtn" onclick="selectRole('partner')">Delivery Partner</button>
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input id="username" type="text" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input id="password" type="password" placeholder="Enter password">
+            </div>
+            <div class="form-group" id="vehicleGroup" style="display:none">
+                <label>Vehicle Number</label>
+                <input id="vehicle" type="text" placeholder="Example: KA01AB1234">
+            </div>
+            <button class="login-btn" onclick="login()">LOGIN TO VIGHNA-DARSHI</button>
+            <div id="loginError" class="error">Invalid credentials. Please check your details.</div>
+            <div class="demo">
+                <strong>Demo Credentials</strong><br>
+                Administrator: <b>admin</b> / <b>Admin@123</b><br>
+                Delivery Partner: <b>partner</b> / <b>Partner@123</b><br>
+                Vehicle: <b>KA01AB1234</b>
+            </div>
+        </div>
+    </section>
+
+    <!-- APPLICATION -->
+    <section id="app">
+        <div class="app-layout">
+            
+            <!-- SIDEBAR -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-logo">
+                    <div class="mini-logo">V</div>
+                    <strong>VIGHNA-DARSHI</strong>
+                </div>
+                <div class="role-label" id="sidebarRole">Administrator</div>
+                
+                <div id="adminNav">
+                    <button class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">◈</span> Command Center</button>
+                    <button class="nav-item" onclick="showPage('warroom',this)"><span class="nav-icon">🚨</span> Disruption War Room</button>
+                    <button class="nav-item" onclick="showPage('fleet',this)"><span class="nav-icon">🚚</span> Live Fleet</button>
+                    <button class="nav-item" onclick="showPage('deliveries',this)"><span class="nav-icon">📦</span> Deliveries</button>
+                    <button class="nav-item" onclick="showPage('impact',this)"><span class="nav-icon">🔗</span> Impact Analysis</button>
+                    <button class="nav-item" onclick="showPage('ai',this)"><span class="nav-icon">🤖</span> AI Decision Copilot</button>
+                    <button class="nav-item" onclick="showPage('history',this)"><span class="nav-icon">📋</span> Decision History</button>
+                </div>
+
+                <div id="partnerNav" style="display:none">
+                    <button class="nav-item active" onclick="showPage('partnerHome',this)"><span class="nav-icon">◈</span> My Dashboard</button>
+                    <button class="nav-item" onclick="showPage('partnerRoute',this)"><span class="nav-icon">🗺️</span> My Route</button>
+                    <button class="nav-item" onclick="showPage('partnerDeliveries',this)"><span class="nav-icon">📦</span> My Deliveries</button>
+                    <button class="nav-item" onclick="showPage('partnerAlerts',this)"><span class="nav-icon">⚠️</span> Route Alerts</button>
+                    <button class="nav-item" onclick="showPage('partnerReport',this)"><span class="nav-icon">🆘</span> Report Incident</button>
+                </div>
+
+                <button class="nav-item logout" onclick="logout()"><span class="nav-icon">↪</span> Logout</button>
+            </aside>
+
+            <!-- MAIN -->
+            <main class="main">
+                <header class="topbar">
+                    <button class="mobile-menu" onclick="toggleSidebar()">☰</button>
+                    <div class="page-title">Vighna-Darshi / <span id="topPageTitle">Command Center</span></div>
+                    <div class="top-actions">
+                        <span><span class="status-dot"></span> System Live</span>
+                        <div class="user-pill" id="currentUser">Administrator</div>
+                    </div>
+                </header>
+
+                <div class="content">
+                    
+                    <!-- ADMIN COMMAND CENTER -->
+                    <div class="page active" id="overview">
+                        <div class="section-title">
+                            <div><h2>Logistics Command Center</h2><span>Real-time operational overview</span></div>
+                            <button class="btn red-btn" onclick="openDisruptionModal()">+ Simulate Disruption</button>
+                        </div>
+                        <div class="grid stats-grid">
+                            <div class="card stat-card"><div class="stat-label">ACTIVE VEHICLES</div><div class="stat-value gold">24</div><div class="stat-sub">22 moving · 2 idle</div></div>
+                            <div class="card stat-card"><div class="stat-label">ACTIVE DELIVERIES</div><div class="stat-value">186</div><div class="stat-sub">171 on schedule</div></div>
+                            <div class="card stat-card"><div class="stat-label">AT RISK</div><div class="stat-value orange" id="riskCount">12</div><div class="stat-sub">SLA may be impacted</div></div>
+                            <div class="card stat-card"><div class="stat-label">NETWORK RESILIENCE</div><div class="stat-value green">87%</div><div class="stat-sub">+4.2% from yesterday</div></div>
+                        </div>
+                        <div class="two-col">
+                            <div class="card">
+                                <div class="section-title"><h2>Live Fleet Map (Google Maps)</h2><span>GPS updates every 5 seconds</span></div>
+                                <div id="adminMap"></div>
+                            </div>
+                            <div class="card">
+                                <div class="section-title"><h2>Active Disruptions</h2><span id="incidentCount">3 incidents</span></div>
+                                <div id="adminAlerts">
+                                    <div class="alert critical"><div class="alert-icon">🚨</div><div><div class="alert-title">NH-44 Road Closure</div><div class="alert-text">Accident reported near Hosur. 4 vehicles and 17 deliveries affected.</div></div></div>
+                                    <div class="alert warning"><div class="alert-icon">⚠️</div><div><div class="alert-title">Heavy Rainfall</div><div class="alert-text">Reduced speed expected on Bengaluru route.</div></div></div>
+                                    <div class="alert warning"><div class="alert-icon">🔧</div><div><div class="alert-title">Vehicle Maintenance</div><div class="alert-text">KA05CD6789 reported engine warning.</div></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WAR ROOM -->
+                    <div class="page" id="warroom">
+                        <div class="section-title">
+                            <div><h2>Disruption War Room</h2><span>Understand → Assess → Respond</span></div>
+                            <button class="btn red-btn" onclick="openDisruptionModal()">Trigger New Disruption</button>
+                        </div>
+                        <div class="two-col">
+                            <div class="card">
+                                <div class="section-title"><h2>Current Incident</h2><span class="badge red">CRITICAL</span></div>
+                                <h3 style="margin-bottom:10px">NH-44 Accident & Road Closure</h3>
+                                <p style="color:#888;font-size:12px;line-height:1.7">Accident reported at 14:32. Road is expected to remain blocked for approximately 2 hours.</p><br>
+                                <div class="three-col">
+                                    <div><small style="color:#777">Vehicles</small><h2 class="red">4</h2></div>
+                                    <div><small style="color:#777">Deliveries</small><h2 class="orange">17</h2></div>
+                                    <div><small style="color:#777">Revenue Risk</small><h2 class="gold">₹1.84L</h2></div>
+                                </div>
+                            </div>
+                            <div class="ai-box">
+                                <div class="ai-header"><div class="ai-title">🤖 AI Recommended Action</div><span class="badge gold">HIGH CONFIDENCE</span></div>
+                                <div class="ai-response">Reroute vehicles V-104, V-117, V-121 and V-128 through the Hosur–Electronic City alternative route.<br><br>Estimated delay reduction: <strong class="green">42 minutes</strong>.<br>Expected additional distance: <strong>18 km</strong>.<br>SLA protection probability: <strong class="gold">91%</strong>.</div>
+                                <div class="ai-action">
+                                    <button class="btn gold-btn" onclick="showToast('Recovery plan approved','Vehicles have been assigned the alternative route.')">Approve Recovery Plan</button>
+                                    <button class="btn" onclick="showToast('Scenario opened','Alternative recovery scenarios are being calculated.')">Compare Scenarios</button>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="card">
+                            <div class="section-title"><h2>Recovery Options</h2><span>Ranked by operational impact</span></div>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Strategy</th><th>Extra Time</th><th>Extra Distance</th><th>Cost</th><th>SLA Protection</th><th>Risk</th><th></th></tr></thead>
+                                    <tbody>
+                                        <tr><td><strong>Alternative Route A</strong></td><td>+18 min</td><td>+18 km</td><td>₹7,200</td><td class="green">91%</td><td class="green">Low</td><td><button class="btn gold-btn" onclick="showToast('Plan selected','Alternative Route A selected.')">Select</button></td></tr>
+                                        <tr><td>Alternative Route B</td><td>+11 min</td><td>+31 km</td><td>₹11,800</td><td class="green">96%</td><td class="orange">Medium</td><td><button class="btn" onclick="showToast('Plan selected','Alternative Route B selected.')">Select</button></td></tr>
+                                        <tr><td>Wait for Clearance</td><td>+95 min</td><td>0 km</td><td>₹2,000</td><td class="red">54%</td><td class="red">High</td><td><button class="btn red-btn" onclick="showToast('High risk option','This option has significant SLA risk.')">Review</button></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FLEET -->
+                    <div class="page" id="fleet">
+                        <div class="section-title"><div><h2>Live Fleet Tracking</h2><span>All connected vehicles</span></div></div>
+                        <div class="card"><div class="table-wrap"><table><thead><tr><th>Vehicle</th><th>Driver</th><th>Route</th><th>Speed</th><th>ETA</th><th>Risk</th><th>Status</th></tr></thead><tbody id="fleetTable"></tbody></table></div></div>
+                    </div>
+
+                    <!-- DELIVERIES -->
+                    <div class="page" id="deliveries">
+                        <div class="section-title"><div><h2>Delivery & SLA Management</h2><span>Monitor affected shipments</span></div></div>
+                        <div class="card">
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Order</th><th>Customer</th><th>Vehicle</th><th>Destination</th><th>ETA</th><th>SLA</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>#VD-10482</td><td>ABC Retail</td><td>KA01AB1234</td><td>Bengaluru</td><td>16:42</td><td class="green">32 min buffer</td><td><span class="badge green">ON TRACK</span></td></tr>
+                                        <tr><td>#VD-10483</td><td>Metro Stores</td><td>KA05CD6789</td><td>Hosur</td><td>17:15</td><td class="orange">12 min buffer</td><td><span class="badge orange">AT RISK</span></td></tr>
+                                        <tr><td>#VD-10484</td><td>FreshMart</td><td>V-117</td><td>Electronic City</td><td>18:05</td><td class="red">-21 min</td><td><span class="badge red">DELAYED</span></td></tr>
+                                        <tr><td>#VD-10485</td><td>Quick Commerce</td><td>V-121</td><td>Silk Board</td><td>18:40</td><td class="green">41 min buffer</td><td><span class="badge green">ON TRACK</span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IMPACT -->
+                    <div class="page" id="impact">
+                        <div class="section-title"><div><h2>Cascading Impact Analysis</h2><span>Understand dependencies before acting</span></div></div>
+                        <div class="three-col">
+                            <div class="card"><div class="stat-label">DISRUPTION</div><h3>NH-44 Closure</h3><p style="color:#888;font-size:12px;margin-top:10px">Primary disruption event</p></div>
+                            <div class="card"><div class="stat-label">DIRECT IMPACT</div><h3 class="orange">4 Vehicles</h3><p style="color:#888;font-size:12px;margin-top:10px">17 deliveries affected</p></div>
+                            <div class="card"><div class="stat-label">CASCADE IMPACT</div><h3 class="red">31 Activities</h3><p style="color:#888;font-size:12px;margin-top:10px">8 dependent operations</p></div>
+                        </div>
+                        <br>
+                        <div class="card">
+                            <div class="section-title"><h2>Dependency Chain</h2></div>
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+                                <span class="badge red">ROAD CLOSURE</span><span>→</span><span class="badge orange">VEHICLE DELAY</span><span>→</span><span class="badge orange">DELIVERY ETA</span><span>→</span><span class="badge red">SLA RISK</span><span>→</span><span class="badge red">CUSTOMER IMPACT</span>
+                            </div>
+                            <br><p style="color:#888;font-size:12px;line-height:1.7">Vighna-Darshi identifies downstream activities affected by the disruption instead of only showing the original incident.</p>
+                        </div>
+                    </div>
+
+                    <!-- AI -->
+                    <div class="page" id="ai">
+                        <div class="section-title"><div><h2>AI Decision Copilot</h2><span>Decision support for logistics operators</span></div></div>
+                        <div class="ai-box">
+                            <div class="ai-header"><div class="ai-title">Current Recommendation</div><span class="badge green">91% CONFIDENCE</span></div>
+                            <div class="ai-response"><strong>Situation detected:</strong> NH-44 accident is creating a 38-minute average delay across 4 vehicles.<br><br><strong>Recommended action:</strong> Move affected vehicles to the Hosur–Electronic City alternate route.<br><br><strong>Expected outcome:</strong> Protect 15 of 17 affected deliveries from SLA breach.<br><br><strong>Estimated operational cost:</strong> ₹7,200.</div>
+                            <div class="ai-action">
+                                <button class="btn gold-btn" onclick="showToast('Recommendation approved','Recovery instructions sent to affected vehicles.')">Approve</button>
+                                <button class="btn" onclick="showToast('Simulation started','Calculating alternative recovery scenarios...')">What-if Simulation</button>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="three-col">
+                            <div class="card"><h3>Fastest</h3><p style="color:#888;font-size:12px;margin-top:8px">Minimum delivery delay</p><h2 class="gold" style="margin-top:15px">42 min saved</h2></div>
+                            <div class="card"><h3>Cheapest</h3><p style="color:#888;font-size:12px;margin-top:8px">Minimum additional cost</p><h2 class="green" style="margin-top:15px">₹2,000</h2></div>
+                            <div class="card"><h3>Safest</h3><p style="color:#888;font-size:12px;margin-top:8px">Maximum SLA protection</p><h2 class="blue" style="margin-top:15px">96%</h2></div>
+                        </div>
+                    </div>
+
+                    <!-- HISTORY -->
+                    <div class="page" id="history">
+                        <div class="section-title"><div><h2>Decision History</h2><span>Operational audit trail</span></div></div>
+                        <div class="card">
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Time</th><th>Event</th><th>Decision</th><th>Operator</th><th>Outcome</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>14:32</td><td>NH-44 Accident</td><td>Reroute V-104</td><td>Admin</td><td class="green">Approved</td></tr>
+                                        <tr><td>13:48</td><td>Heavy Rain</td><td>Reduce speed limit</td><td>Admin</td><td class="green">Applied</td></tr>
+                                        <tr><td>12:21</td><td>Vehicle Warning</td><td>Send maintenance</td><td>Admin</td><td class="green">Resolved</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PARTNER HOME -->
+                    <div class="page" id="partnerHome">
+                        <div class="section-title">
+                            <div><h2>Delivery Partner Dashboard</h2><span>Your assigned vehicle and deliveries</span></div>
+                            <button class="btn red-btn" onclick="openPartnerReport()">Report Incident</button>
+                        </div>
+                        <div class="grid stats-grid">
+                            <div class="card stat-card"><div class="stat-label">MY VEHICLE</div><div class="stat-value gold">KA01AB1234</div><div class="stat-sub">Vehicle active</div></div>
+                            <div class="card stat-card"><div class="stat-label">TODAY'S DELIVERIES</div><div class="stat-value">8</div><div class="stat-sub">5 completed</div></div>
+                            <div class="card stat-card"><div class="stat-label">NEXT DELIVERY</div><div class="stat-value orange">32 min</div><div class="stat-sub">ETA to Bengaluru</div></div>
+                            <div class="card stat-card"><div class="stat-label">ROUTE STATUS</div><div class="stat-value green">ON TRACK</div><div class="stat-sub">32 minute SLA buffer</div></div>
+                        </div>
+                        <div class="two-col">
+                            <div class="card">
+                                <div class="section-title"><h2>My Vehicle</h2><span class="badge green">CONNECTED</span></div>
+                                <div class="vehicle-card">
+                                    <div class="vehicle-icon">🚚</div>
+                                    <div><div class="big-status">KA01AB1234</div><p style="color:#888;font-size:12px;margin-top:5px">Tata Prima · GPS Connected</p><p style="color:#888;font-size:12px;margin-top:5px">Speed: <strong id="partnerSpeed">54 km/h</strong></p></div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="section-title"><h2>Latest Instruction</h2></div>
+                                <div class="instruction">
+                                    <strong>Continue current route</strong>
+                                    <p>No immediate route change required. Maintain safe speed and follow your assigned delivery sequence.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="card">
+                            <div class="section-title"><h2>Route Alerts</h2><span id="partnerAlertStatus">No critical alerts</span></div>
+                            <div id="partnerAlerts">
+                                <div class="alert warning"><div class="alert-icon">⚠️</div><div><div class="alert-title">Traffic congestion ahead</div><div class="alert-text">Expect approximately 8 minutes additional travel time.</div></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PARTNER ROUTE -->
+                    <div class="page" id="partnerRoute">
+                        <div class="section-title"><div><h2>My Live Route (Google Maps)</h2><span>GPS tracking for KA01AB1234</span></div></div>
+                        <div class="card"><div id="partnerMap"></div></div>
+                        <br>
+                        <div class="three-col">
+                            <div class="card"><div class="stat-label">CURRENT LOCATION</div><h3>Bengaluru Outer Ring Road</h3></div>
+                            <div class="card"><div class="stat-label">DESTINATION</div><h3>Electronic City</h3></div>
+                            <div class="card"><div class="stat-label">ETA</div><h3 class="green">16:42</h3></div>
+                        </div>
+                    </div>
+
+                    <!-- PARTNER DELIVERIES -->
+                    <div class="page" id="partnerDeliveries">
+                        <div class="section-title"><div><h2>My Deliveries</h2><span>Orders assigned to KA01AB1234</span></div></div>
+                        <div class="card">
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Order</th><th>Customer</th><th>Destination</th><th>ETA</th><th>SLA</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>#VD-10482</td><td>ABC Retail</td><td>Bengaluru</td><td>16:42</td><td class="green">32 min buffer</td><td><span class="badge green">IN TRANSIT</span></td></tr>
+                                        <tr><td>#VD-10491</td><td>FreshMart</td><td>Electronic City</td><td>17:10</td><td class="green">24 min buffer</td><td><span class="badge green">IN TRANSIT</span></td></tr>
+                                        <tr><td>#VD-10496</td><td>Metro Stores</td><td>Hosur</td><td>17:42</td><td class="orange">15 min buffer</td><td><span class="badge orange">UPCOMING</span></td></tr>
+                                        <tr><td>#VD-10502</td><td>Quick Commerce</td><td>Silk Board</td><td>18:15</td><td class="green">40 min buffer</td><td><span class="badge blue">ASSIGNED</span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PARTNER ALERTS -->
+                    <div class="page" id="partnerAlertsPage">
+                        <div class="section-title"><div><h2>Route Alerts</h2><span>Disruptions relevant to your route</span></div></div>
+                        <div class="alert warning"><div class="alert-icon">⚠️</div><div><div class="alert-title">Heavy Traffic</div><div class="alert-text">Traffic density has increased near Electronic City. Expected delay: 8 minutes.</div></div></div>
+                        <div class="alert critical"><div class="alert-icon">🚨</div><div><div class="alert-title">Important: Follow Admin Instructions</div><div class="alert-text">If a new disruption appears on your route, follow the latest instruction displayed by Vighna-Darshi.</div></div></div>
+                    </div>
+
+                    <!-- PARTNER REPORT -->
+                    <div class="page" id="partnerReport">
+                        <div class="section-title"><div><h2>Report Vehicle / Route Incident</h2><span>Immediately notify the logistics team</span></div></div>
+                        <div class="card">
+                            <p style="color:#888;font-size:12px;line-height:1.7;margin-bottom:20px">Use this form if you experience a vehicle problem, accident, road blockage, delivery issue or any unexpected condition affecting your route.</p>
+                            <select id="incidentType">
+                                <option>Vehicle Problem</option><option>Accident</option><option>Road Blockage</option><option>Traffic Delay</option><option>Delivery Problem</option><option>Other</option>
+                            </select>
+                            <textarea id="incidentDescription" placeholder="Describe what happened..."></textarea>
+                            <button class="btn gold-btn" onclick="submitPartnerIncident()">SEND INCIDENT TO LOGISTICS TEAM</button>
+                        </div>
+                        <br>
+                        <div class="card">
+                            <h3>Emergency Response</h3>
+                            <p style="color:#888;font-size:12px;line-height:1.7;margin-top:10px">For immediate safety emergencies, stop at a safe location and contact the designated emergency support team.</p><br>
+                            <button class="btn red-btn" onclick="showToast('Emergency alert sent','Logistics administrator has been notified.')">🚨 SEND EMERGENCY ALERT</button>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <!-- DISRUPTION MODAL (Admin) -->
+    <div class="modal" id="disruptionModal">
+        <div class="modal-box">
+            <h2>🚨 Create Disruption</h2>
+            <input id="disruptionTitle" placeholder="Disruption title">
+            <select id="disruptionSeverity"><option value="critical">Critical</option><option value="warning">Warning</option></select>
+            <textarea id="disruptionDescription" placeholder="Describe the disruption..."></textarea>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeDisruptionModal()">Cancel</button>
+                <button class="btn red-btn" onclick="createDisruption()">Broadcast Disruption</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PARTNER CRITICAL ALERT MODAL (Driver UI Pop-up) -->
+    <div class="modal" id="partnerAlertModal">
+        <div class="modal-box" style="border: 2px solid var(--red);">
+            <h2 class="red">🚨 URGENT ROUTE DISRUPTION</h2>
+            <h3 id="partnerAlertModalTitle" style="margin-bottom: 10px;"></h3>
+            <p id="partnerAlertModalDesc" style="color: #ccc; line-height: 1.5; margin-bottom: 20px;"></p>
+            <div class="instruction">
+                <strong class="red">Action Required: Take Alternative Route</strong>
+                <p>Please switch to the logistics-approved alternative route immediately to avoid SLA breach and delay.</p>
+            </div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn gold-btn" style="width:100%; padding: 15px; font-size: 16px;" onclick="closePartnerAlertModal()">Acknowledge & Reroute Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PARTNER INCIDENT MODAL -->
+    <div class="modal" id="partnerIncidentModal">
+        <div class="modal-box">
+            <h2>🆘 Report Incident</h2>
+            <select id="quickIncidentType"><option>Vehicle Problem</option><option>Accident</option><option>Road Blockage</option><option>Traffic Delay</option><option>Delivery Problem</option></select>
+            <textarea id="quickIncidentDescription" placeholder="Describe the incident..."></textarea>
+            <div class="modal-actions">
+                <button class="btn" onclick="closePartnerReport()">Cancel</button>
+                <button class="btn red-btn" onclick="submitQuickIncident()">Send Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI CHATBOT -->
+    <div id="chatbot" class="chatbot">
+        <div class="chat-header" onclick="toggleChat()">🤖 AI Assistant Copilot</div>
+        <div class="chat-body" id="chatBody">
+            <div class="msg bot">Hello! I'm your Logistics AI. How can I assist you today?</div>
+        </div>
+        <div class="chat-input" id="chatInputArea">
+            <input type="text" id="chatInput" placeholder="Ask something...">
+            <button onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+        <strong id="toastTitle">Notification</strong>
+        <p id="toastText">Notification message</p>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
